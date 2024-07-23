@@ -14,7 +14,8 @@ func main() {
 		Handler: mux,
 	}
 
-	mux.Handle("/", http.FileServer(http.Dir(filePathRoot)))
+	mux.Handle("/app/*", http.StripPrefix("/app", http.FileServer(http.Dir(filePathRoot))))
+	mux.HandleFunc("/healthz", handlerReadiness)
 
 	log.Printf("Serving files from %s on port: %s\n", filePathRoot, port)
 	log.Fatal(srv.ListenAndServe())
