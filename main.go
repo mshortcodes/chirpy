@@ -22,10 +22,11 @@ func main() {
 		fileServerHits: 0,
 	}
 
-	mux.Handle("/app/*", http.StripPrefix("/app", apiCfg.middlewareMetricsInc(http.FileServer(http.Dir(filePathRoot)))))
-	mux.HandleFunc("/healthz", handlerReadiness)
-	mux.HandleFunc("/metrics", apiCfg.handlerMetrics)
-	mux.HandleFunc("/reset", apiCfg.handlerReset)
+	fsHandler := http.StripPrefix("/app", apiCfg.middlewareMetricsInc(http.FileServer(http.Dir(filePathRoot))))
+	mux.Handle("/app/*", fsHandler)
+	mux.HandleFunc("GET /api/healthz", handlerReadiness)
+	mux.HandleFunc("GET /admin/metrics", apiCfg.handlerMetrics)
+	mux.HandleFunc("GET /api/reset", apiCfg.handlerReset)
 
 	log.Printf("Serving files from %s on port: %s\n", filePathRoot, port)
 	log.Fatal(srv.ListenAndServe())
