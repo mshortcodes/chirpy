@@ -2,8 +2,10 @@ package main
 
 import (
 	"chirpy/internal/database"
+	"flag"
 	"log"
 	"net/http"
+	"os"
 )
 
 type apiConfig struct {
@@ -12,6 +14,17 @@ type apiConfig struct {
 }
 
 func main() {
+	dbg := flag.Bool("debug", false, "Enable debug mode")
+	flag.Parse()
+
+	if *dbg {
+		log.Println("Debug mode enabled. Deleting database...")
+		err := os.Remove("database.json")
+		if err != nil {
+			log.Println("Couldn't delete database.")
+		}
+	}
+
 	filePathRoot := "."
 	port := "8080"
 
