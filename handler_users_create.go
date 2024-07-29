@@ -1,6 +1,7 @@
 package main
 
 import (
+	"chirpy/internal/auth"
 	"encoding/json"
 	"net/http"
 )
@@ -12,7 +13,8 @@ type User struct {
 
 func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
-		Email string `json:"email"`
+		Password string `json:"password"`
+		Email    string `json:"email"`
 	}
 
 	params := parameters{}
@@ -23,9 +25,14 @@ func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request)
 		respondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
 	}
 
-	user, err := cfg.DB.CreateUser(params.Email)
+	hashedPassword, err := auth.HashPassword(params.Password)
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, err.Error())
+		respondWithError(w, http.StatusInternalServerError, "Couldn't hash password")
+	}
+
+	user, err := cfg.DB.CreateUser(params.Email, hashedPassword)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Couldn't create user")
 	}
 
 	respondWithJSON(w, http.StatusCreated, User{
