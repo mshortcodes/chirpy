@@ -6,14 +6,19 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
 type apiConfig struct {
 	fileServerHits int
 	DB             *database.DB
+	jwtSecret      string
 }
 
 func main() {
+	godotenv.Load(".env")
+
 	dbg := flag.Bool("debug", false, "Enable debug mode")
 	flag.Parse()
 
@@ -33,9 +38,15 @@ func main() {
 		log.Fatal(err)
 	}
 
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		log.Fatal("JWT_SECRET environment variable is not set")
+	}
+
 	apiCfg := apiConfig{
 		fileServerHits: 0,
 		DB:             db,
+		jwtSecret:      jwtSecret,
 	}
 
 	mux := http.NewServeMux()
@@ -51,6 +62,7 @@ func main() {
 
 	mux.HandleFunc("POST /api/users", apiCfg.handlerUsersCreate)
 	mux.HandleFunc("POST /api/login", apiCfg.handlerUsersLogin)
+	mux.HandleFunc("PUT /api/users", apiCfg.handlerUsersUpdate)
 
 	mux.HandleFunc("GET /admin/metrics", apiCfg.handlerMetrics)
 

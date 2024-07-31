@@ -8,8 +8,14 @@ import (
 
 func (cfg *apiConfig) handlerUsersLogin(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
-		Password string `json:"password"`
-		Email    string `json:"email"`
+		Password         string `json:"password"`
+		Email            string `json:"email"`
+		ExpiresInSeconds int    `json:"expires_in_seconds"`
+	}
+
+	type response struct {
+		User
+		Token string `json:"token"`
 	}
 
 	params := parameters{}
@@ -30,8 +36,16 @@ func (cfg *apiConfig) handlerUsersLogin(w http.ResponseWriter, r *http.Request) 
 		respondWithError(w, http.StatusUnauthorized, "Invalid password")
 	}
 
-	respondWithJSON(w, http.StatusOK, User{
-		ID:    user.ID,
-		Email: user.Email,
+	token, err := auth.MakeJWT(params.ExpiresInSeconds, user.ID, cfg.jwtSecret)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't create JWT")
+	}
+
+	respondWithJSON(w, http.StatusOK, response{
+		User: User{
+			ID:    user.ID,
+			Email: user.Email,
+		},
+		Token: token,
 	})
 }
