@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func (cfg *apiConfig) handlerUsersLogin(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Password         string `json:"password"`
 		Email            string `json:"email"`
