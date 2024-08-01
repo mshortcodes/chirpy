@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"net/http"
@@ -10,21 +12,13 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func MakeJWT(expirationTime, userID int, tokenSecret string) (string, error) {
+func MakeJWT(userID int, tokenSecret string, expirationTime time.Duration) (string, error) {
 	signingKey := []byte(tokenSecret)
-
-	defaultExpiration := 60 * 60 * 24
-	if expirationTime == 0 {
-		expirationTime = defaultExpiration
-	}
-	if expirationTime > defaultExpiration {
-		expirationTime = defaultExpiration
-	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
 		Issuer:    "chirpy",
 		IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
-		ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Duration(expirationTime) * time.Second)),
+		ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(expirationTime)),
 		Subject:   fmt.Sprintf("%d", userID),
 	})
 
@@ -69,4 +63,13 @@ func ValidateJWT(tokenString, tokenSecret string) (string, error) {
 	}
 
 	return userIDString, nil
+}
+
+func MakeRefreshToken() (string, error) {
+	token := make([]byte, 32)
+	_, err := rand.Read(token)
+	if err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(token), nil
 }
