@@ -55,6 +55,20 @@ func (db *DB) GetUserByEmail(email string) (User, error) {
 	return User{}, errors.New("user doesn't exist")
 }
 
+func (db *DB) GetUserByID(id int) (User, error) {
+	dbStructure, err := db.loadDB()
+	if err != nil {
+		return User{}, err
+	}
+
+	user, ok := dbStructure.Users[id]
+	if !ok {
+		return User{}, errors.New("user doesn't exist")
+	}
+
+	return user, nil
+}
+
 func (db *DB) UpdateUser(userID int, email, hashedPassword string) (User, error) {
 	dbStructure, err := db.loadDB()
 	if err != nil {
