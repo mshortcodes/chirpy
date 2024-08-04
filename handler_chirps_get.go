@@ -30,9 +30,32 @@ func (cfg *apiConfig) handlerChirpsRetrieve(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	authorIDStr := r.URL.Query().Get("author_id")
+	hasAuthor := false
+	if authorIDStr != "" {
+		hasAuthor = true
+	}
+
+	if hasAuthor {
+		authorIDInt, _ := strconv.Atoi(authorIDStr)
+		chirps, err = cfg.DB.GetChirpsByAuthor(authorIDInt)
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Couldn't get chirps")
+			return
+		}
+	}
+
 	sort.Slice(chirps, func(i, j int) bool {
 		return chirps[i].ID < chirps[j].ID
 	})
+
+	sortBy := r.URL.Query().Get("sort")
+
+	if sortBy == "desc" {
+		sort.Slice(chirps, func(i, j int) bool {
+			return chirps[i].ID > chirps[j].ID
+		})
+	}
 
 	respondWithJSON(w, http.StatusOK, chirps)
 }
